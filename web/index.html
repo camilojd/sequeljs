@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>SequelJS, a client-side SQL formatter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+    <![endif]-->
+    <script src="js/jquery-1.8.2.min.js"></script>
+    <script src="js/ZeroClipboard.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="ico/apple-touch-icon-114-precomposed.png">
+      <link rel="apple-touch-icon-precomposed" sizes="72x72" href="ico/apple-touch-icon-72-precomposed.png">
+                    <link rel="apple-touch-icon-precomposed" href="ico/apple-touch-icon-57-precomposed.png">
+                                   <link rel="shortcut icon" href="ico/favicon.png">
+    <style type="text/css">
+      #preFormatted {
+      	      overflow: auto;
+      	      white-space:pre;
+      	      word-wrap: normal;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="span12">
+          <h1 class="text-center">SequelJS</h1>
+          <h4 class="text-center">A client-side SQL formatter</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div id="alertContainer" class="span12">
+        </div>
+      </div>
+      <div class="row">
+        <div class="span9">
+          <div class="well" id="leftcol">
+            <h4>Enter the SQL you wish to format</h4>        
+            <textarea id="txtSQL" onkeyup="saveState()" class="span7" style="height: 200px;"></textarea>
+          </div>
+        </div>
+        <div class="span3">
+          <div class="well" id="rightcol">
+            <h4>Case options</h4>
+            <div>Column names</div><div><select id="idCase"><option value="toEqual">No change</option><option value="toLower">Lowercase</option><option value="toUpper">Uppercase</option><option value="toTitle">Title_Like</option></select></div>
+            <div>Table names</div><div><select id="tbCase"><option value="toEqual">No change</option><option value="toLower">Lowercase</option><option value="toUpper">Uppercase</option><option value="toTitle">Title_Like</option></select></div>
+            <div>Function calls</div><div><select id="fnCase"><option value="toEqual">No change</option><option value="toLower">Lowercase</option><option value="toUpper">Uppercase</option><option value="toTitle">Title_Like</option></select></div>
+            <button onclick="parseAndFormat()" class="btn btn-primary">Format!</button> <button onclick="clearSql()" class="btn">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span9">
+          <pre id="preFormatted" class="prettyprint lang-sql" style="background-color:#333;min-height:190px;"></pre>
+        </div>
+        <div class="span3">
+          <div class="well">
+            <h4>Copy to Clipboard</h4>
+            <select id="selCopyType"><option value="plain">As plain string</option><option value="java">As Java String</option><option value="php">As PHP string</option></select>
+            <button id="btnClipboard" class="btn"><i class="icon-edit"></i> Copy</button>
+          </div>
+        </div>
+      </div>
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/prettify/prettify.js"></script>
+    <script src="js/prettify/lang-sql.js"></script>
+    <script src="js/parser/SqlParser.js"></script>
+    <script src="js/parser/SqlPrettyPrinter.js"></script>
+    <script type="text/javascript">
+      (function() {
+
+        // See if we have localStorage support
+        // shamelessly stolen from http://mathiasbynens.be/notes/localstorage-pattern
+        var storage, fail, uid
+        try {
+          uid = new Date
+          ;(storage = window.localStorage).setItem(uid, uid)
+          fail = storage.getItem(uid) != uid
+          storage.removeItem(uid)
+          fail && (storage = false)
+        } catch(e) {}
+
+        window.saveState = function() {
+          if (storage) localStorage.setItem('sentence', $('#txtSQL').val())
+        }
+
+        if (storage && localStorage.getItem('sentence')) {
+          $('#txtSQL').val(localStorage.getItem('sentence'))
+        }
+
+        // Main
+        var leftheight = $('#leftcol').height()
+        var rightheight = $('#rightcol').height()
+        if (leftheight > rightheight) {
+          $('#rightcol').height(leftheight)
+        } else {
+          $('#leftcol').height(rightheight)
+        }
+        
+        var clip = new ZeroClipboard(document.getElementById('btnClipboard'), {
+          moviePath: 'flash/ZeroClipboard.swf'
+        })
+        
+        var copySettings = {
+          java: {
+            initial: 'String sql = ',
+            prependInitial: '"',
+            prependOthers: '           + "',
+            appendEndline: ' "',
+            appendWhileLines: '\n',
+            last: ';'
+          },
+          php: {
+            initial: '$sql = ',
+            prependInitial: '"',
+            prependOthers: '     . "',
+            appendEndline: ' "',
+            appendWhileLines: '\n',
+            last: ';'
+          }
+        }
+
+        clip.on('dataRequested', function (client, args) {
+          var formatted = window.APPDATA.formatted
+          
+          if (formatted) {
+            var copyType = $('#selCopyType').val()
+            var lines = formatted.split('\n')
+            var st = ''
+            if (copyType != 'plain') {
+              var copySetting = copySettings[copyType]
+              for (var i = 0; i < lines.length; i++) {
+                if (i == 0) st += copySetting.initial
+                
+                if (i == 0) st += copySetting.prependInitial + lines[i].replace(/"/, '\"') + copySetting.appendEndline
+                else        st += copySetting.prependOthers + lines[i].replace(/"/, '\"') + copySetting.appendEndline
+
+                if (i < lines.length - 1) st += copySetting.appendWhileLines
+              }
+              st += ';'
+              formatted = st
+            }
+
+            clip.setText(formatted.replace(/\n/g, '\r\n'))
+          }
+        })
+
+        window.parseAndFormat = function() {
+          $('.alert.alert-block.alert-error').remove()
+          
+          var settings = {identifierCase: $('#idCase').val(), 
+                          functionCase: $('#fnCase').val(),
+                          tableCase: $('#tbCase').val()}
+          
+          var formatted = SqlPrettyPrinter.format($('#txtSQL').val(), settings)
+          if (typeof formatted == 'string') {
+            $('#preFormatted').html(formatted)
+            prettyPrint('#preFormatted')
+            $('#preFormatted').removeClass('prettyprinted')
+            window.APPDATA.formatted = formatted
+          } else if (typeof formatted == 'object') {
+            var exceptionMsg = formatted.message
+            	.replace(/&/g, '&amp;')
+            	.replace(/</g, '&lt;')
+            	.replace(/>/g, '&gt;')
+            	.replace(/\n/g, '<br />')
+            var alertHtml = '<div class="alert alert-block alert-error">' + 
+                            '  <button type="button" class="close" data-dismiss="alert">×</button>' + 
+                            '  <h4 class="alert-heading">Oh snap! I couldn\'t parse your query!</h4>' + 
+                            '  <p>' + exceptionMsg +'</p>' + 
+                            '</div>'
+            $('#alertContainer').html(alertHtml)
+          }
+        }
+        
+        window.clearSql = function() {
+          $('#preFormatted').html('')
+          $('#txtSQL').val('')
+          $('#txtSQL').focus()
+        }
+        
+        window.APPDATA = {}
+      })()
+    </script>
+  </body>
+</html>
