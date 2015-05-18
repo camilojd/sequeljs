@@ -114,6 +114,10 @@ var SqlPrettyPrinter = {
     if (node.distinct) {
         driver.writeKeyword('DISTINCT');
     }
+    if (node.top) {
+        driver.writeKeyword('TOP');
+        driver.write(node.top);
+    }
     for (var i = 0; i < node.columns.length; i++) {
       this.formatColumn(node.columns[i], driver)
       if (node.columns.length > 1 && i != (node.columns.length - 1)) {

@@ -15,6 +15,7 @@
 [a-zA-Z_][a-zA-Z0-9_]*\.\*                       return 'QUALIFIED_STAR'
 \s+                                              /* skip whitespace */
 'SELECT'                                         return 'SELECT'
+'TOP'                                            return 'TOP'
 'FROM'                                           return 'FROM'
 'WHERE'                                          return 'WHERE'
 'DISTINCT'                                       return 'DISTINCT'
@@ -87,15 +88,20 @@ main
     ;
 
 selectClause
-    : SELECT optDistinctClause selectExprList 
+    : SELECT optDistinctClause optTopClause selectExprList 
       FROM tableExprList
       optWhereClause optGroupByClause optHavingClause optOrderByClause
-      { $$ = {nodeType: 'Select', distinct: $2, columns: $3, from: $5, where:$6, groupBy:$7, having:$8, orderBy:$9}; }
+      { $$ = {nodeType: 'Select', distinct: $2, top: $3, columns: $4, from: $6, where:$7, groupBy:$8, having:$9, orderBy:$10}; }
     ;
 
 optDistinctClause
     : { $$ = false; }
     | DISTINCT { $$ = true; }
+    ;
+
+optTopClause
+    : { $$ = null; }
+    | TOP NUMERIC { $$ = $2; }
     ;
 
 optWhereClause
