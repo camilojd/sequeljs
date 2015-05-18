@@ -15,6 +15,7 @@
 [a-zA-Z_][a-zA-Z0-9_]*\.\*                       return 'QUALIFIED_STAR'
 \s+                                              /* skip whitespace */
 'SELECT'                                         return 'SELECT'
+'TOP'                                            return 'TOP'
 'FROM'                                           return 'FROM'
 'WHERE'                                          return 'WHERE'
 'DISTINCT'                                       return 'DISTINCT'
@@ -87,10 +88,20 @@ main
     ;
 
 selectClause
-    : SELECT selectExprList 
-      FROM tableExprList
+    : SELECT optDistinctClause optTopClause selectExprList 
+      optTableExprList
       optWhereClause optGroupByClause optHavingClause optOrderByClause
-      { $$ = {nodeType: 'Select', columns: $2, from: $4, where:$5, groupBy:$6, having:$7, orderBy:$8}; }
+      { $$ = {nodeType: 'Select', distinct: $2, top: $3, columns: $4, from: $5, where:$6, groupBy:$7, having:$8, orderBy:$9}; }
+    ;
+
+optDistinctClause
+    : { $$ = false; }
+    | DISTINCT { $$ = true; }
+    ;
+
+optTopClause
+    : { $$ = null; }
+    | TOP NUMERIC { $$ = $2; }
     ;
 
 optWhereClause
@@ -143,6 +154,11 @@ selectExpr
     : STAR { $$ = {nodeType: 'Column', value:'*'}; }
     | QUALIFIED_STAR  { $$ = {nodeType: 'Column', value:$1}; }
     | expression optTableExprAlias  { $$ = {nodeType: 'Column', value:$1, alias:$2}; }
+    ;
+
+optTableExprList
+    : { $$ = []; }
+    | FROM tableExprList { $$ = $2; }
     ;
 
 tableExprList

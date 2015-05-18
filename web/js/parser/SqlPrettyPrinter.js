@@ -111,6 +111,13 @@ var SqlPrettyPrinter = {
     driver.saveCurrentPos(leftSize)
     driver.writeLeftKeyword('SELECT')
 
+    if (node.distinct) {
+        driver.writeKeyword('DISTINCT');
+    }
+    if (node.top) {
+        driver.writeKeyword('TOP');
+        driver.write(node.top);
+    }
     for (var i = 0; i < node.columns.length; i++) {
       this.formatColumn(node.columns[i], driver)
       if (node.columns.length > 1 && i != (node.columns.length - 1)) {
@@ -118,13 +125,15 @@ var SqlPrettyPrinter = {
         driver.wrapToRight()
       }
     }
-    driver.writeLeftKeyword('FROM')
-    for (var i = 0; i < node.from.length; i++) {
-      this.formatFrom(node.from[i], driver)
-      if (node.from.length > 1 && i != (node.from.length - 1)) {
-        driver.write(',')
-        driver.wrapToRight()
-      }            
+    if (node.from.length) {
+      driver.writeLeftKeyword('FROM')
+      for (var i = 0; i < node.from.length; i++) {
+        this.formatFrom(node.from[i], driver)
+        if (node.from.length > 1 && i != (node.from.length - 1)) {
+          driver.write(',')
+          driver.wrapToRight()
+        }            
+      }
     }
     if (node.where) this.formatWhere(node.where, driver)
     if (node.groupBy) this.formatGroupBy(node.groupBy, driver)
