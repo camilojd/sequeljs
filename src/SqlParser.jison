@@ -89,9 +89,9 @@ main
 
 selectClause
     : SELECT optDistinctClause optTopClause selectExprList 
-      FROM tableExprList
+      optTableExprList
       optWhereClause optGroupByClause optHavingClause optOrderByClause
-      { $$ = {nodeType: 'Select', distinct: $2, top: $3, columns: $4, from: $6, where:$7, groupBy:$8, having:$9, orderBy:$10}; }
+      { $$ = {nodeType: 'Select', distinct: $2, top: $3, columns: $4, from: $5, where:$6, groupBy:$7, having:$8, orderBy:$9}; }
     ;
 
 optDistinctClause
@@ -154,6 +154,11 @@ selectExpr
     : STAR { $$ = {nodeType: 'Column', value:'*'}; }
     | QUALIFIED_STAR  { $$ = {nodeType: 'Column', value:$1}; }
     | expression optTableExprAlias  { $$ = {nodeType: 'Column', value:$1, alias:$2}; }
+    ;
+
+optTableExprList
+    : { $$ = []; }
+    | FROM tableExprList { $$ = $2; }
     ;
 
 tableExprList
