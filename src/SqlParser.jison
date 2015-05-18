@@ -11,6 +11,7 @@
 
 %%
 
+[/][*].*?[*][/]                                  /* skip comments */
 [a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*   return 'QUALIFIED_IDENTIFIER'
 [a-zA-Z_][a-zA-Z0-9_]*\.\*                       return 'QUALIFIED_STAR'
 \s+                                              /* skip whitespace */
