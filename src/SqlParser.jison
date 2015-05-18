@@ -73,6 +73,7 @@
 (true|false)                                     return 'BOOLEAN'
 [0-9]+(\.[0-9]+)?                                return 'NUMERIC'
 [a-zA-Z_][a-zA-Z0-9_]*                           return 'IDENTIFIER'
+[?]                                              return 'BIND'
 <<EOF>>                                          return 'EOF'
 .                                                return 'INVALID'
 
@@ -324,5 +325,6 @@ value
     | NUMERIC { $$ = $1; }
     | BOOLEAN { $$ = $1; }
     | NULL { $$ = $1; }
+    | BIND { $$ = $1; }
     ;
 

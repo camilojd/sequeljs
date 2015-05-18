@@ -5,7 +5,8 @@ pre .str { color: #ffa0a0 } /* string  - pink */
 pre .kwd { color: #f0e68c; font-weight: bold }
 pre .com { color: #87ceeb } /* comment - skyblue */
 pre .typ { color: #98fb98 } /* type    - lightgreen */
-pre .lit { color: #cd5c5c } /* literal - darkred */
+pre .lit { color: #ffa0a0 } /* literal - pink */
+pre .bnd { color: #ffa0a0 } /* bind    - pink */
 pre .pun { color: #fff }    /* punctuation */
 pre .pln { color: #fff }    /* plaintext */
 pre .tag { color: #f0e68c; font-weight: bold } /* html/xml tag    - lightyellow */
