@@ -111,6 +111,9 @@ var SqlPrettyPrinter = {
     driver.saveCurrentPos(leftSize)
     driver.writeLeftKeyword('SELECT')
 
+    if (node.distinct) {
+        driver.writeKeyword('DISTINCT');
+    }
     for (var i = 0; i < node.columns.length; i++) {
       this.formatColumn(node.columns[i], driver)
       if (node.columns.length > 1 && i != (node.columns.length - 1)) {

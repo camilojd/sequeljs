@@ -87,10 +87,15 @@ main
     ;
 
 selectClause
-    : SELECT selectExprList 
+    : SELECT optDistinctClause selectExprList 
       FROM tableExprList
       optWhereClause optGroupByClause optHavingClause optOrderByClause
-      { $$ = {nodeType: 'Select', columns: $2, from: $4, where:$5, groupBy:$6, having:$7, orderBy:$8}; }
+      { $$ = {nodeType: 'Select', distinct: $2, columns: $3, from: $5, where:$6, groupBy:$7, having:$8, orderBy:$9}; }
+    ;
+
+optDistinctClause
+    : { $$ = false; }
+    | DISTINCT { $$ = true; }
     ;
 
 optWhereClause
