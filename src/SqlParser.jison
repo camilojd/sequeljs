@@ -321,6 +321,7 @@ term
     | LPAREN expression RPAREN { $$ = {nodeType: 'Term', value: $2}; }
     | IDENTIFIER LPAREN optFunctionExpressionList RPAREN { $$ = {nodeType: 'FunctionCall', name: $1, args: $3}; }
     | QUALIFIED_IDENTIFIER LPAREN optFunctionExpressionList RPAREN { $$ = {nodeType: 'FunctionCall', name: $1, args: $3}; }
+    | LPAREN selectClause RPAREN { $$ = {nodeType: 'Select', value:$2}; }
     ;
 
 caseWhen
