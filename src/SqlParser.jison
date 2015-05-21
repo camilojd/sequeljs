@@ -72,6 +72,7 @@
 'LAST'                                           return 'LAST'
 'OPTION'                                         return 'OPTION'
 'WITH'                                           return 'WITH'
+'CAST'                                           return 'CAST'
 ['](\\.|[^'])*[']                                return 'STRING'
 'NULL'                                           return 'NULL'
 (true|false)                                     return 'BOOLEAN'
@@ -348,7 +349,17 @@ term
     | LPAREN expression RPAREN { $$ = {nodeType: 'Term', value: $2}; }
     | IDENTIFIER LPAREN optFunctionExpressionList RPAREN { $$ = {nodeType: 'FunctionCall', name: $1, args: $3}; }
     | QUALIFIED_IDENTIFIER LPAREN optFunctionExpressionList RPAREN { $$ = {nodeType: 'FunctionCall', name: $1, args: $3}; }
+    | CAST LPAREN expression AS dataType RPAREN { $$ = {nodeType: 'Cast', expression:$3, dataType:$5}; }
     | LPAREN selectClause RPAREN { $$ = {nodeType: 'Select', value:$2}; }
+    ;
+
+dataType
+    : IDENTIFIER optDataTypeLength { $$ = {name: $1, len: $2}; }
+    ;
+
+optDataTypeLength
+    : { $$ = null; }
+    | LPAREN NUMERIC RPAREN { $$ = $2; }
     ;
 
 caseWhen
