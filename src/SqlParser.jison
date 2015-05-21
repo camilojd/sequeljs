@@ -73,7 +73,7 @@
 'OPTION'                                         return 'OPTION'
 'WITH'                                           return 'WITH'
 'CAST'                                           return 'CAST'
-['](\\.|[^'])*[']                                return 'STRING'
+N?['](\\.|[^'])*[']                              return 'STRING'
 'NULL'                                           return 'NULL'
 (true|false)                                     return 'BOOLEAN'
 [0-9]+(\.[0-9]+)?                                return 'NUMERIC'
