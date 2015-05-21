@@ -139,6 +139,7 @@ var SqlPrettyPrinter = {
     if (node.groupBy) this.formatGroupBy(node.groupBy, driver)
     if (node.having) this.formatHaving(node.having, driver)
     if (node.orderBy) this.formatOrderBy(node.orderBy, driver)
+    if (node.queryHints) this.formatQueryHints(node.queryHints, driver)
     
     driver.restoreCurrentPos()
   },
@@ -198,6 +199,17 @@ var SqlPrettyPrinter = {
       driver.closeParen()
     }
     this.formatAlias(node, driver)
+    if (node.tableHints) {
+      driver.writeKeyword('WITH')
+      driver.openParen()
+      for (var i = 0; i < node.tableHints.length; i++) {
+        driver.writeKeyword(node.tableHints[i])
+        if (i != (node.tableHints.length - 1)) { 
+          driver.write(',')
+        }
+      }
+      driver.closeParen()
+    }
   },
   formatWhere: function(node, driver) {
     driver.writeLeftKeyword('WHERE')
@@ -343,5 +355,19 @@ var SqlPrettyPrinter = {
       driver.writeKeyword('LIKE')
       this.formatOperand(node.value, driver)
     }
+  },
+  formatQueryHints: function(node, driver) {
+    driver.writeLeftKeyword('OPTION')
+    driver.openParen()
+    for (var i = 0; i < node.length; i++) {
+      var elem = node[i]
+      for (var j = 0; j < elem.length; j++) {
+        driver.writeUsingSettingsCase(elem[j], 'identifier')
+      }
+      if (i != (node.length - 1)) {
+        driver.write(',')
+      }
+    }
+    driver.closeParen()
   }
 }

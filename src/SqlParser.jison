@@ -70,6 +70,8 @@
 'NULLS'                                          return 'NULLS'
 'FIRST'                                          return 'FIRST'
 'LAST'                                           return 'LAST'
+'OPTION'                                         return 'OPTION'
+'WITH'                                           return 'WITH'
 ['](\\.|[^'])*[']                                return 'STRING'
 'NULL'                                           return 'NULL'
 (true|false)                                     return 'BOOLEAN'
@@ -92,8 +94,8 @@ main
 selectClause
     : SELECT optDistinctClause optTopClause selectExprList 
       optTableExprList
-      optWhereClause optGroupByClause optHavingClause optOrderByClause
-      { $$ = {nodeType: 'Select', distinct: $2, top: $3, columns: $4, from: $5, where:$6, groupBy:$7, having:$8, orderBy:$9}; }
+      optWhereClause optGroupByClause optHavingClause optOrderByClause optQueryHintsClause
+      { $$ = {nodeType: 'Select', distinct: $2, top: $3, columns: $4, from: $5, where:$6, groupBy:$7, having:$8, orderBy:$9, queryHints:$10}; }
     ;
 
 optDistinctClause
@@ -146,6 +148,21 @@ optOrderByNulls
     | NULLS FIRST { $$ = 'NULLS FIRST'; }
     | NULLS LAST { $$ = 'NULLS LAST'; }
     ;
+
+optQueryHintsClause
+    : { $$ = null; }
+    | OPTION LPAREN queryHintList RPAREN { $$ = $3; }
+    ;
+
+queryHintList
+    : queryHintList COMMA queryHint { $$ = $1; $1.push($3); }
+    | queryHint { $$ = [$1]; }
+    ;
+
+queryHint
+    : queryHint IDENTIFIER { $$ = $1; $1.push($2); }
+    | IDENTIFIER { $$ = [$1]; }
+    ;
     
 selectExprList
     : selectExpr { $$ = [$1]; } 
@@ -175,7 +192,7 @@ tableExpr
     ;
 
 joinComponent
-    : tableExprPart optTableExprAlias { $$ = {exprName: $1, alias: $2}; }
+    : tableExprPart optTableExprAlias optTableHintsClause { $$ = {exprName: $1, alias: $2, tableHints: $3}; }
     ;
 
 tableExprPart
@@ -190,6 +207,16 @@ optTableExprAlias
     | AS IDENTIFIER { $$ = {value: $2, includeAs: 1}; }
     ;
 
+optTableHintsClause
+    : { $$ = null; }
+    | WITH LPAREN tableHintList RPAREN { $$ = $3; }
+    ;
+
+tableHintList
+    : tableHintList COMMA IDENTIFIER { $$ = $1; $1.push($3); }
+    | IDENTIFIER { $$ = [$1]; }
+    ;
+    
 optJoinModifier
     : { $$ = ''; }
     | LEFT        { $$ = 'LEFT'; }
