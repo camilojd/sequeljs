@@ -105,6 +105,9 @@ var SqlPrettyPrinter = {
     return SqlPrettyPrinter.buffer
   },
   formatSelect: function(node, driver) {
+    this.formatExpressionPlus(node, driver)
+  },
+  formatSelectItem: function(node, driver) {
     var leftSize = 6
     for (var keyword in SqlPrettyPrinter.keywords) {
       if (node[keyword]) leftSize = Math.max(leftSize, SqlPrettyPrinter.keywords[keyword].length)
@@ -165,11 +168,24 @@ var SqlPrettyPrinter = {
       	this.formatCondition(node[i], driver)
       }
   },
+  formatExpressionPlus: function(node, driver) {
+    driver.saveCurrentPos(0)
+    for (var i = 0; i < node.length; i++) {
+      if (node[i].nodeType === 'Select') {
+        this.formatSelectItem(node[i], driver);
+      } else if (node[i].nodeType === 'SetOperator') {
+        driver.wrapToRight()
+        driver.writeKeyword(node[i].value)
+        driver.wrapToRight()
+      } else {
+        this.formatExpression(node[i], driver)
+      }
+    }
+    driver.restoreCurrentPos()
+  },
   formatExpression: function(node, driver) {
     if (node.nodeType === 'Select') {
-      driver.openParen()
-      this.formatSelect(node, driver);        
-      driver.closeParen()
+      this.formatSelectItem(node, driver);
     } else if (node.nodeType == 'AndCondition') {
       this.formatAndChain(node.value, driver)
     } else {
@@ -271,7 +287,7 @@ var SqlPrettyPrinter = {
       } else {
         /* Sub expression */
         driver.openParen()
-        this.formatExpression(node.value, driver)
+        this.formatExpressionPlus(node.value, driver);
         driver.closeParen()
       }
     } else if (node.nodeType == 'Operand'
@@ -318,9 +334,8 @@ var SqlPrettyPrinter = {
       driver.writeLeftKeyword('END')
       driver.restoreCurrentPos()
     } else if (node.nodeType == 'Select') {
-      this.formatExpression(node.value, driver)
+      this.formatSelectItem(node.value, driver)
     } else if (node.nodeType == 'Cast') {
-      console.log(node)
       driver.writeKeyword('CAST')
       driver.openParen(true)
       this.formatExpression(node.expression, driver)
