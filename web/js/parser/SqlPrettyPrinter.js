@@ -163,7 +163,11 @@ var SqlPrettyPrinter = {
       }
   },
   formatExpression: function(node, driver) {
-    if (node.nodeType == 'AndCondition') {
+    if (node.nodeType === 'Select') {
+      driver.openParen()
+      this.formatSelect(node, driver);        
+      driver.closeParen()
+    } else if (node.nodeType == 'AndCondition') {
       this.formatAndChain(node.value, driver)
     } else {
       /* OrCondition */
@@ -299,6 +303,8 @@ var SqlPrettyPrinter = {
       driver.restoreCurrentPos()
       driver.writeLeftKeyword('END')
       driver.restoreCurrentPos()
+    } else if (node.nodeType == 'Select') {
+      this.formatExpression(node.value, driver)
     }
   },
   formatRhs: function(node, driver) {
