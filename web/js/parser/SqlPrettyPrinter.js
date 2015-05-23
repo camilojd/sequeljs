@@ -36,12 +36,14 @@ var SqlPrettyPrinter = {
           this.buffer = this.buffer + s
           SqlPrettyPrinter.buffer = this.buffer
       },
-      write: function(st) {
+      write: function(st, suppressPrepend) {
         var prepend = ' '
         if (st == ',' || st == '' || st == ')' || st == 'SELECT') prepend = ''
 
         if (this.prevChar =='(') prepend = ''
-        
+
+        if (suppressPrepend) prepend = ''
+
         this.appendToBuffer(prepend + st)
         this.prevChar = st
       },
@@ -57,8 +59,8 @@ var SqlPrettyPrinter = {
       lastLinePositionElem: function() {
         return this.linePositions[this.linePositions.length - 1]
       },
-      openParen: function() {
-        this.write('(')
+      openParen: function(suppressPrepend) {
+        this.write('(', suppressPrepend)
       },
       closeParen: function() {
         this.write(')')
@@ -317,6 +319,19 @@ var SqlPrettyPrinter = {
       driver.restoreCurrentPos()
     } else if (node.nodeType == 'Select') {
       this.formatExpression(node.value, driver)
+    } else if (node.nodeType == 'Cast') {
+      console.log(node)
+      driver.writeKeyword('CAST')
+      driver.openParen(true)
+      this.formatExpression(node.expression, driver)
+      driver.writeKeyword('AS')
+      driver.writeKeyword(node.dataType.name)
+      if (node.dataType.len !== null) {
+        driver.openParen(true)
+        driver.writeKeyword(node.dataType.len)
+        driver.closeParen()
+      }
+      driver.closeParen()
     }
   },
   formatRhs: function(node, driver) {
