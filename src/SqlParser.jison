@@ -47,14 +47,15 @@ ORDER\s+BY\b                                     return 'ORDER_BY'
 'AND'                                            return 'LOGICAL_AND'
 'OR'                                             return 'LOGICAL_OR'
 'NOT'                                            return 'LOGICAL_NOT'
-'INNER'                                          return 'INNER'
-'OUTER'                                          return 'OUTER'
-'JOIN'                                           return 'JOIN'
-'LEFT'                                           return 'LEFT'
-'RIGHT'                                          return 'RIGHT'
-'FULL'                                           return 'FULL'
-'NATURAL'                                        return 'NATURAL'
-'CROSS'                                          return 'CROSS'
+INNER\s+JOIN\b                                   return 'INNER_JOIN'
+LEFT\s+OUTER\s+JOIN\b                            return 'LEFT_OUTER_JOIN'
+RIGHT\s+OUTER\s+JOIN\b                           return 'RIGHT_OUTER_JOIN'
+JOIN\b                                           return 'JOIN'
+LEFT\s+JOIN\b                                    return 'LEFT_JOIN'
+RIGHT\s+JOIN\b                                   return 'RIGHT_JOIN'
+FULL\s+JOIN\b                                    return 'FULL_JOIN'
+NATURAL\s+JOIN\b                                 return 'NATURAL_JOIN'
+CROSS\s+JOIN\b                                   return 'CROSS_JOIN'
 'CASE'                                           return 'CASE'
 'WHEN'                                           return 'WHEN'
 'THEN'                                           return 'THEN'
@@ -188,8 +189,8 @@ tableExprList
 
 tableExpr
     : joinComponent { $$ = {nodeType:'TableExpr', value: [$1]}; }
-    | tableExpr optJoinModifier JOIN joinComponent { $$ = $1; $1.value.push({nodeType:'TableExpr', value: $4, modifier:$2}); }
-    | tableExpr optJoinModifier JOIN joinComponent ON expression { $$ = $1; $1.value.push({nodeType:'TableExpr', value: $4, modifier:$2, expression:$6}); }
+    | tableExpr optJoinModifier joinComponent { $$ = $1; $1.value.push({nodeType:'TableExpr', value: $3, modifier:$2}); }
+    | tableExpr optJoinModifier joinComponent ON expression { $$ = $1; $1.value.push({nodeType:'TableExpr', value: $3, modifier:$2, expression:$5}); }
     ;
 
 joinComponent
@@ -219,15 +220,15 @@ tableHintList
     ;
     
 optJoinModifier
-    : { $$ = ''; }
-    | LEFT        { $$ = 'LEFT'; }
-    | LEFT OUTER  { $$ = 'LEFT OUTER'; }
-    | RIGHT       { $$ = 'RIGHT'; }
-    | RIGHT OUTER { $$ = 'RIGHT OUTER'; }
-    | FULL        { $$ = 'FULL'; }
-    | INNER       { $$ = 'INNER'; }
-    | CROSS       { $$ = 'CROSS'; }
-    | NATURAL     { $$ = 'NATURAL'; }
+    : JOIN             { $$ = ''; }
+    | LEFT_JOIN        { $$ = 'LEFT'; }
+    | LEFT_OUTER_JOIN  { $$ = 'LEFT OUTER'; }
+    | RIGHT_JOIN       { $$ = 'RIGHT'; }
+    | RIGHT_OUTER_JOIN { $$ = 'RIGHT OUTER'; }
+    | FULL_JOIN        { $$ = 'FULL'; }
+    | INNER_JOIN       { $$ = 'INNER'; }
+    | CROSS_JOIN       { $$ = 'CROSS'; }
+    | NATURAL_JOIN     { $$ = 'NATURAL'; }
     ;
 
 expressionPlus
