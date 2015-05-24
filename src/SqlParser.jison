@@ -75,6 +75,7 @@ N?['](\\.|[^'])*[']                              return 'STRING'
 (true|false)\b                                   return 'BOOLEAN'
 [0-9]+(\.[0-9]+)?                                return 'NUMERIC'
 [a-zA-Z_][a-zA-Z0-9_]*                           return 'IDENTIFIER'
+["][a-zA-Z_][a-zA-Z0-9_]*["]                     return 'QUOTED_IDENTIFIER'
 [?]                                              return 'BIND'
 <<EOF>>                                          return 'EOF'
 .                                                return 'INVALID'
@@ -355,6 +356,7 @@ factor
 term
     : value { $$ = {nodeType: 'Term', value: $1}; }
     | IDENTIFIER { $$ = {nodeType: 'Term', value: $1}; }
+    | QUOTED_IDENTIFIER { $$ = {nodeType: 'Term', value: $1}; }
     | QUALIFIED_IDENTIFIER { $$ = {nodeType: 'Term', value: $1}; }
     | caseWhen { $$ = $1; }
     | LPAREN expressionPlus RPAREN { $$ = {nodeType: 'Term', value: $2}; }
@@ -365,6 +367,7 @@ term
 
 dataType
     : IDENTIFIER optDataTypeLength { $$ = {name: $1, len: $2}; }
+    | QUOTED_IDENTIFIER optDataTypeLength { $$ = {name: $1, len: $2}; }
     ;
 
 optDataTypeLength
