@@ -1,8 +1,3 @@
-/**
- * Still pending:
- *  - UNION
- */
-
 /* description: Parses SQL */
 /* :tabSize=4:indentSize=4:noTabs=true: */
 %lex
@@ -24,6 +19,7 @@
 'GROUP BY'                                       return 'GROUP_BY'
 'HAVING'                                         return 'HAVING'
 'ORDER BY'                                       return 'ORDER_BY'
+(UNION[ ]ALL|UNION|INTERSECT|EXCEPT)             return 'SET_OPERATOR'
 ','                                              return 'COMMA'
 '+'                                              return 'PLUS'
 '-'                                              return 'MINUS'
@@ -93,6 +89,10 @@ main
     ;
 
 selectClause
+    : expressionPlus { $$ = $1; }
+    ;
+
+selectClauseItem
     : SELECT optDistinctClause optTopClause selectExprList 
       optTableExprList
       optWhereClause optGroupByClause optHavingClause optOrderByClause optQueryHintsClause
@@ -230,6 +230,13 @@ optJoinModifier
     | NATURAL     { $$ = 'NATURAL'; }
     ;
 
+expressionPlus
+    : expressionPlus SET_OPERATOR selectClauseItem { $$ = $1; $1.push({nodeType:'SetOperator', value:$2}); $1.push($3); }
+    | expressionPlus SET_OPERATOR expression { $$ = $1; $1.push({nodeType:'SetOperator', value:$2}); $1.push($3); }
+    | selectClauseItem { $$ = [$1] }
+    | expression { $$ = [$1] }
+    ;
+
 expression
     : andCondition { $$ = {nodeType:'AndCondition', value: $1}; }
     | expression LOGICAL_OR andCondition { $$ = {nodeType:'OrCondition', left: $1, right: $3}; }
@@ -280,10 +287,13 @@ rhsIsTest
     ;
     
 rhsInTest
-    : IN LPAREN selectClause RPAREN { $$ = { nodeType: 'RhsInSelect', value: $3 }; }
-    | LOGICAL_NOT IN LPAREN selectClause RPAREN { $$ = { nodeType: 'RhsInSelect', value: $4, not:1 }; }
-    | IN LPAREN commaSepExpressionList RPAREN { $$ = { nodeType: 'RhsInExpressionList', value: $3 }; }
-    | LOGICAL_NOT IN LPAREN commaSepExpressionList RPAREN { $$ = { nodeType: 'RhsInExpressionList', value: $4, not:1 }; }
+    : IN LPAREN rhsInClause RPAREN { $$ = $3; }
+    | LOGICAL_NOT IN LPAREN rhsInClause RPAREN { $$ = $4; $4.not = 1; }
+    ;
+
+rhsInClause
+    : selectClause { $$ = { nodeType: 'RhsInSelect', value: $1}; }
+    | expression COMMA commaSepExpressionList { $$ = { nodeType: 'RhsInExpressionList', value: $3}; $3.unshift($1); }
     ;
 
 commaSepExpressionList
@@ -346,11 +356,10 @@ term
     | IDENTIFIER { $$ = {nodeType: 'Term', value: $1}; }
     | QUALIFIED_IDENTIFIER { $$ = {nodeType: 'Term', value: $1}; }
     | caseWhen { $$ = $1; }
-    | LPAREN expression RPAREN { $$ = {nodeType: 'Term', value: $2}; }
+    | LPAREN expressionPlus RPAREN { $$ = {nodeType: 'Term', value: $2}; }
     | IDENTIFIER LPAREN optFunctionExpressionList RPAREN { $$ = {nodeType: 'FunctionCall', name: $1, args: $3}; }
     | QUALIFIED_IDENTIFIER LPAREN optFunctionExpressionList RPAREN { $$ = {nodeType: 'FunctionCall', name: $1, args: $3}; }
     | CAST LPAREN expression AS dataType RPAREN { $$ = {nodeType: 'Cast', expression:$3, dataType:$5}; }
-    | LPAREN selectClause RPAREN { $$ = {nodeType: 'Select', value:$2}; }
     ;
 
 dataType
