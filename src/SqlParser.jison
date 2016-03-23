@@ -164,6 +164,9 @@ queryHintList
 
 queryHint
     : queryHint IDENTIFIER { $$ = $1; $1.push($2); }
+    | queryHint CMP_EQUALS { $$ = $1; $1.push($2); }
+    | queryHint NUMERIC { $$ = $1; $1.push($2); }
+    | queryHint STRING { $$ = $1; $1.push($2); }
     | IDENTIFIER { $$ = [$1]; }
     ;
     
