@@ -20,7 +20,7 @@ var SqlPrettyPrinter = {
   format: function(query, settings) {
     var ast = null
     try {
-      ast = parser.parse(query)
+      ast = SqlParser.parse(query)
     } catch(e) {
       return e
     }

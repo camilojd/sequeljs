@@ -1,0 +1,12 @@
+{
+  "name" : "sequeljs",
+  "version" : "1.0.0",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/camilojd/sequeljs.git"
+  },
+  "dependencies" : {
+    "jison" : "latest"
+  },
+  "license" : "MIT"
+}
