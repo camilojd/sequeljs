@@ -368,11 +368,13 @@ var SqlPrettyPrinter = {
       }
       this.formatOperand(node.value, driver)
     } else if (node.nodeType == 'RhsInSelect') {
+      if (node.not) driver.writeKeyword('NOT')
       driver.writeKeyword('IN')
       driver.openParen()
       this.formatSelect(node.value, driver)
       driver.closeParen()
     } else if (node.nodeType == 'RhsInExpressionList') {
+      if (node.not) driver.writeKeyword('NOT')
       driver.writeKeyword('IN')
       driver.openParen()
       for (var i = 0; i < node.value.length; i++) {
