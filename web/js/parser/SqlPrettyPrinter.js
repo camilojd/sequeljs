@@ -188,6 +188,9 @@ var SqlPrettyPrinter = {
       this.formatSelectItem(node, driver);
     } else if (node.nodeType == 'AndCondition') {
       this.formatAndChain(node.value, driver)
+    } else if (node.nodeType == 'DistinctFunctionParam') {
+      driver.writeKeyword('DISTINCT');
+      this.formatExpression(node.value, driver)
     } else {
       /* OrCondition */
       this.formatExpression(node.left, driver)
