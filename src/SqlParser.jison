@@ -308,6 +308,7 @@ commaSepExpressionList
 
 functionParam
     : expression { $$ = $1; }
+    | DISTINCT expression { $$ = { nodeType: 'DistinctFunctionParam', value: $2}; }
     | STAR { $$ = $1; }
     | QUALIFIED_STAR { $$ = $1; }
     ;
